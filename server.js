@@ -25,7 +25,6 @@ const storage =
 const upload = multer({
         storage,
         dest: "incomingFile/", // destination folder
-        limits: {fileSize: 3500000}, // size we will acept, not bigger
         fileFilter: (req, file, cb) => {
             console.log(file);
             const filetypes = /pdf|vnd.openxmlformats-officedocument.spreadsheetml.sheet|vnd.ms-excel/; // filetypes you will accept
@@ -45,26 +44,46 @@ const upload = multer({
 app.use(upload);
 
 app.post("/check", async(req,res)=>{
+    console.log("this is from post")
+    console.log(req.file)
     if(req.body.givenText !== undefined){
         let uuid = uuidv4();
         fs.appendFile(`incomingText/${uuid+'.txt'}`, req.body.givenText, (err)=>{
             if(err)
                 throw err;
             console.log("filesaved");
+            res.status(200).send("Your Text saved successfully in .txt file with same name in incomingText folder on server");
         })
     }
-    let options = {
-        mode: 'text',
-        //pythonOptions: ['-u'], // get print results in real-time
-        //scriptPath: 'path/to/my/scripts', //If you are having python_test.py script in same folder, then it's optional.
-        args: [`${nameOfFile}`] //An argument which can be accessed in the script using sys.argv[1]
-    };
-    PythonShell.run('resume_classifier.py',options, function (err, result){
-        if (err) throw err;
-        // result is an array consisting of messages collected
-        //during execution of script.
-        res.send(result)
-    });
+    if(req.file !== undefined) {
+        if (req.file.mimetype === "application/vnd.ms-excel") {
+            let options = {
+                mode: 'text',
+                //pythonOptions: ['-u'], // get print results in real-time
+                //scriptPath: 'path/to/my/scripts', //If you are having python_test.py script in same folder, then it's optional.
+                args: [`${nameOfFile}`] //An argument which can be accessed in the script using sys.argv[1]
+            };
+            PythonShell.run('resume_classifier.py', options, function (err, result) {
+                if (err) throw err;
+                // result is an array consisting of messages collected
+                //during execution of script.
+                res.status(200).send(result)
+            });
+        }
+        if (req.file.mimetype === "application/pdf") {
+            console.log("reached in pdf section")
+            let options = {
+                mode: 'text',
+                args: [`${nameOfFile}`]
+            };
+            PythonShell.run('pdfToText.py', options, function (err, result) {
+                if (err)
+                    throw err;
+                console.log(result)
+                res.status(200).send(result)
+            });
+        }
+    }
 })
 
 app.listen(PORT, ()=>{

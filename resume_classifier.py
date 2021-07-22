@@ -2,7 +2,6 @@ import sys
 import os
 incomingFileName = sys.argv[1]
 filePath = os.path.dirname(os.path.abspath(__file__)) + "/incomingFile/" + incomingFileName
-print(filePath)
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
