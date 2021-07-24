@@ -14,4 +14,4 @@ with open(filePath, 'rb') as pdf_file, io.open(saveFilePath, 'w', encoding="utf-
         page = read_pdf.getPage(page_number)
         page_content = page.extractText()
         text_file.write(page_content)
-print("text is extracted from the PDF and saved in .txt file with same name inside extractedText folder")
+        print(page_content)

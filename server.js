@@ -44,7 +44,6 @@ const upload = multer({
 app.use(upload);
 
 app.post("/check", async(req,res)=>{
-    console.log("this is from post")
     console.log(req.file)
     if(req.body.givenText !== undefined){
         let uuid = uuidv4();
@@ -71,17 +70,19 @@ app.post("/check", async(req,res)=>{
             });
         }
         if (req.file.mimetype === "application/pdf") {
-            console.log("reached in pdf section")
-            let options = {
-                mode: 'text',
-                args: [`${nameOfFile}`]
-            };
-            PythonShell.run('pdfToText.py', options, function (err, result) {
-                if (err)
-                    throw err;
-                console.log(result)
-                res.status(200).send(result)
-            });
+            try {
+                let options = {
+                    mode: 'text',
+                    args: [`${nameOfFile}`]
+                };
+                PythonShell.run('pdfToText.py', options, function (err, result) {
+                    if (err)
+                        res.status(200).send(["An error occurred while processing the complete file.","Could only process some portion of the file.", "Extracted Text: ", result])
+                    else res.status(200).send(result)
+                });
+            }catch (e) {
+                res.status(400).send(["An error occurred while processing the file", e])
+            }
         }
     }
 })
